@@ -1,0 +1,87 @@
+syntax = "proto3";
+
+package auth;
+
+// ===== AUTH SERVICE =====
+service AuthService {
+  // User registration
+  rpc Register (RegisterRequest) returns (RegisterResponse);
+  
+  // User login
+  rpc Login (LoginRequest) returns (LoginResponse);
+  
+  // Password reset request
+  rpc RequestPasswordReset (RequestPasswordResetRequest) returns (GenericResponse);
+  
+  // Reset password with token
+  rpc ResetPassword (ResetPasswordRequest) returns (GenericResponse);
+  
+  // Reset password after email revert
+  rpc ResetPasswordAfterRevert (ResetPasswordAfterRevertRequest) returns (GenericResponse);
+  
+  // Request account unlock
+  rpc RequestUnlock (RequestUnlockRequest) returns (GenericResponse);
+  
+  // Confirm email
+  rpc ConfirmEmail (TokenRequest) returns (GenericResponse);
+  
+  // Confirm email update
+  rpc ConfirmEmailUpdate (TokenRequest) returns (GenericResponse);
+  
+  // Revert email change
+  rpc RevertEmail (TokenRequest) returns (RevertEmailResponse);
+  
+  // Unlock account
+  rpc UnlockAccount (TokenRequest) returns (GenericResponse);
+}
+
+// ===== MESSAGES =====
+
+message RegisterRequest {
+  string email = 1;
+  string password = 2;
+  string name = 3;
+}
+
+message RegisterResponse {
+  string message = 1;
+}
+
+message LoginRequest {
+  string email = 1;
+  string password = 2;
+}
+
+message LoginResponse {
+  string accessToken = 1;
+}
+
+message RequestPasswordResetRequest {
+  string email = 1;
+}
+
+message ResetPasswordRequest {
+  string token = 1;
+  string newPassword = 2;
+}
+
+message ResetPasswordAfterRevertRequest {
+  string token = 1;
+  string newPassword = 2;
+}
+
+message RequestUnlockRequest {
+  string email = 1;
+}
+
+message TokenRequest {
+  string token = 1;
+}
+
+message RevertEmailResponse {
+  string resetToken = 1;
+}
+
+message GenericResponse {
+  string message = 1;
+}

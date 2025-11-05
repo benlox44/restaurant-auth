@@ -1,0 +1,65 @@
+syntax = "proto3";
+
+package users;
+
+// ===== USERS SERVICE =====
+service UsersService {
+  // Get own profile
+  rpc GetMyProfile (GetMyProfileRequest) returns (UserResponse);
+  
+  // Update own profile
+  rpc UpdateProfile (UpdateProfileRequest) returns (GenericResponse);
+  
+  // Update own password
+  rpc UpdatePassword (UpdatePasswordRequest) returns (GenericResponse);
+  
+  // Request email update
+  rpc RequestEmailUpdate (RequestEmailUpdateRequest) returns (GenericResponse);
+  
+  // Delete own account
+  rpc DeleteAccount (DeleteAccountRequest) returns (GenericResponse);
+}
+
+// ===== MESSAGES =====
+
+message GetMyProfileRequest {
+  // Empty - userId viene del JWT token en metadata
+}
+
+message UpdateProfileRequest {
+  string name = 1;
+}
+
+message UpdatePasswordRequest {
+  string currentPassword = 1;
+  string newPassword = 2;
+}
+
+message RequestEmailUpdateRequest {
+  string password = 1;
+  string newEmail = 2;
+}
+
+message DeleteAccountRequest {
+  string password = 1;
+}
+
+message User {
+  int32 id = 1;
+  string name = 2;
+  string email = 3;
+  bool isLocked = 4;
+  bool isEmailConfirmed = 5;
+  string createdAt = 6;
+  string oldEmail = 7;
+  string newEmail = 8;
+  string emailChangedAt = 9;
+}
+
+message UserResponse {
+  User user = 1;
+}
+
+message GenericResponse {
+  string message = 1;
+}

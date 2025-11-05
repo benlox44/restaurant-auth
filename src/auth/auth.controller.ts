@@ -1,113 +1,143 @@
-import { Body, Controller, Get, Post, Query } from '@nestjs/common';
+import { Controller, UseFilters } from '@nestjs/common';
+import { GrpcMethod, RpcException } from '@nestjs/microservices';
 
 import { AuthService } from './auth.service.js';
-import { CreateUserDto } from './dto/create-user.dto.js';
-import { LoginDto } from './dto/login.dto.js';
-import { RequestPasswordResetDto } from './dto/request-password-reset.dto.js';
-import { RequestUnlockDto } from './dto/request-unlock.dto.js';
-import { ResetPasswordAfterRevertDto } from './dto/reset-password-after-revert.dto.js';
-import { ResetPasswordDto } from './dto/reset-password.dto.js';
 
-/**
- * AuthController
- *
- * Controller responsible for handling authentication and authorization flows.
- *
- * Exposes endpoints organized by HTTP method:
- * - POST METHODS: Register, login, request password reset, reset password, request unlock.
- * - GET METHODS: Confirm email, revert email, unlock account using tokens.
- *
- * Routes manage user sessions and account recovery processes.
- */
-@Controller('auth')
+import { GrpcExceptionFilter } from '../common/filters/grpc-exception.filter.js';
+
+interface RegisterRequest {
+  email: string;
+  password: string;
+  name: string;
+}
+
+interface LoginRequest {
+  email: string;
+  password: string;
+}
+
+interface TokenRequest {
+  token: string;
+}
+
+interface ResetPasswordRequest {
+  token: string;
+  newPassword: string;
+}
+
+interface EmailRequest {
+  email: string;
+}
+
+@Controller()
+@UseFilters(new GrpcExceptionFilter())
 export class AuthController {
   public constructor(private readonly authService: AuthService) {}
 
-  // ===== POST METHODS =====
+  @GrpcMethod('AuthService', 'Register')
+  public async register(data: RegisterRequest): Promise<{ message: string }> {
+    // Validación de campos requeridos
+    if (!data.email || !data.password || !data.name) {
+      throw new RpcException({
+        code: 3, // INVALID_ARGUMENT
+        message: 'Email, password, and name are required fields',
+      });
+    }
 
-  @Post()
-  public async create(
-    @Body() dto: CreateUserDto,
-  ): Promise<{ message: string }> {
-    await this.authService.create(dto);
-    return { message: 'Confirmation email sent to ' + dto.email };
-  }
-
-  @Post('login')
-  public async login(@Body() dto: LoginDto): Promise<{ access_token: string }> {
-    const access_token = await this.authService.login(dto);
-    return { access_token };
-  }
-
-  @Post('request-password-reset')
-  public async requestPasswordReset(
-    @Body() dto: RequestPasswordResetDto,
-  ): Promise<{ message: string }> {
-    await this.authService.requestPasswordReset(dto);
-    return {
-      message: 'If your email is registered and is confirmed, a link was sent',
+    const createUserDto = {
+      email: data.email,
+      password: data.password,
+      name: data.name,
     };
+    await this.authService.create(createUserDto);
+    return { message: 'User registered successfully. Please check your email to confirm.' };
   }
 
-  @Post('reset-password')
-  public async resetPassword(
-    @Query('token') token: string,
-    @Body() dto: ResetPasswordDto,
-  ): Promise<{ message: string }> {
-    await this.authService.resetPassword(token, dto);
-    return { message: 'Password changed successfully' };
-  }
+  @GrpcMethod('AuthService', 'Login')
+  public async login(data: LoginRequest): Promise<{ accessToken: string }> {
+    // Validación de campos requeridos
+    if (!data.email || !data.password) {
+      throw new RpcException({
+        code: 3, // INVALID_ARGUMENT
+        message: 'Email and password are required fields',
+      });
+    }
 
-  @Post('reset-password-after-revert')
-  public async resetPasswordAfterRevert(
-    @Query('token') token: string,
-    @Body() dto: ResetPasswordAfterRevertDto,
-  ): Promise<{ message: string }> {
-    await this.authService.resetPasswordAfterRevert(token, dto);
-    return { message: 'Password changed successfully' };
-  }
-
-  @Post('request-unlock')
-  public async requestUnlock(
-    @Body() dto: RequestUnlockDto,
-  ): Promise<{ message: string }> {
-    await this.authService.requestUnlock(dto);
-    return {
-      message: 'If your email is registered and is locked, a link was sent',
+    const loginDto = {
+      email: data.email,
+      password: data.password,
     };
+    const accessToken = await this.authService.login(loginDto);
+    return { accessToken };
   }
 
-  // ===== GET METHODS =====
+  @GrpcMethod('AuthService', 'RequestPasswordReset')
+  public async requestPasswordReset(data: EmailRequest): Promise<{ message: string }> {
+    // Validación de campo requerido
+    if (!data.email) {
+      throw new RpcException({
+        code: 3, // INVALID_ARGUMENT
+        message: 'Email is required',
+      });
+    }
 
-  @Get('confirm-email')
-  public async confirmEmail(
-    @Query('token') token: string,
-  ): Promise<{ message: string }> {
-    await this.authService.confirmEmail(token);
-    return { message: 'Email confirmed successfuly' };
+    const requestDto = {
+      email: data.email,
+    };
+    await this.authService.requestPasswordReset(requestDto);
+    return { message: 'If your email is registered and confirmed, a password reset link has been sent.' };
   }
 
-  @Get('confirm-email-update')
-  public async confirmEmailUpdate(
-    @Query('token') token: string,
-  ): Promise<{ message: string }> {
-    await this.authService.confirmEmailUpdate(token);
-    return { message: 'Email changed successfully' };
+  @GrpcMethod('AuthService', 'ResetPassword')
+  public async resetPassword(data: ResetPasswordRequest): Promise<{ message: string }> {
+    await this.authService.resetPassword(data.token, { newPassword: data.newPassword });
+    return { message: 'Password has been reset successfully.' };
   }
 
-  @Get('revert-email')
-  public async revertEmail(
-    @Query('token') token: string,
-  ): Promise<{ reset_token: string }> {
-    const reset_token = await this.authService.revertEmail(token);
-    return { reset_token };
+  @GrpcMethod('AuthService', 'ResetPasswordAfterRevert')
+  public async resetPasswordAfterRevert(data: ResetPasswordRequest): Promise<{ message: string }> {
+    await this.authService.resetPasswordAfterRevert(data.token, { newPassword: data.newPassword });
+    return { message: 'Password has been reset successfully.' };
   }
 
-  @Get('unlock-account')
-  public async unlockAccount(
-    @Query('token') token: string,
-  ): Promise<{ message: string }> {
-    await this.authService.unlockAccount(token);
-    return { message: 'Your account has been unlocked. You can now log in' };
+  @GrpcMethod('AuthService', 'RequestUnlock')
+  public async requestUnlock(data: EmailRequest): Promise<{ message: string }> {
+    // Validación de campo requerido
+    if (!data.email) {
+      throw new RpcException({
+        code: 3, // INVALID_ARGUMENT
+        message: 'Email is required',
+      });
+    }
+
+    const requestDto = {
+      email: data.email,
+    };
+    await this.authService.requestUnlock(requestDto);
+    return { message: 'If your email is registered and your account is locked, an unlock link has been sent.' };
+  }
+
+  @GrpcMethod('AuthService', 'ConfirmEmail')
+  public async confirmEmail(data: TokenRequest): Promise<{ message: string }> {
+    await this.authService.confirmEmail(data.token);
+    return { message: 'Your email has been confirmed successfully. You can now log in.' };
+  }
+
+  @GrpcMethod('AuthService', 'ConfirmEmailUpdate')
+  public async confirmEmailUpdate(data: TokenRequest): Promise<{ message: string }> {
+    await this.authService.confirmEmailUpdate(data.token);
+    return { message: 'Your email has been updated successfully. Please log in again with your new email.' };
+  }
+
+  @GrpcMethod('AuthService', 'RevertEmail')
+  public async revertEmail(data: TokenRequest): Promise<{ resetToken: string }> {
+    const resetToken = await this.authService.revertEmail(data.token);
+    return { resetToken };
+  }
+
+  @GrpcMethod('AuthService', 'UnlockAccount')
+  public async unlockAccount(data: TokenRequest): Promise<{ message: string }> {
+    await this.authService.unlockAccount(data.token);
+    return { message: 'Your account has been unlocked successfully. You can now log in.' };
   }
 }

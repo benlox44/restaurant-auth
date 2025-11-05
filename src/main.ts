@@ -1,32 +1,32 @@
-import { ValidationPipe, Logger } from '@nestjs/common';
+import { join } from 'path';
+
+import { Logger } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
+import { Transport, MicroserviceOptions } from '@nestjs/microservices';
 
 import { AppModule } from './app.module.js';
 import 'dotenv/config';
-import { required } from './common/config/env.config.js';
 
 const logger = new Logger('Bootstrap');
 
 async function bootstrap(): Promise<void> {
-  const app = await NestFactory.create(AppModule);
-
-  app.useGlobalPipes(new ValidationPipe({
-    whitelist: true, // Strip properties that do not have any decorators
-    forbidNonWhitelisted: true, // Throw an error if non-whitelisted properties are present
-    transform: true, // Automatically transform payloads to be objects typed according to their DTO classes
-  }));
-
-  const clientOrigin = required('CLIENT_URL');
-  app.enableCors({
-    origin: clientOrigin,
-    credentials: true,
+  // Create gRPC-only microservice
+  const grpcPort = process.env.GRPC_PORT || '50051';
+  
+  const app = await NestFactory.createMicroservice<MicroserviceOptions>(AppModule, {
+    transport: Transport.GRPC,
+    options: {
+      package: ['auth', 'users'],
+      protoPath: [
+        join(process.cwd(), 'proto/auth.proto'),
+        join(process.cwd(), 'proto/users.proto'),
+      ],
+      url: `0.0.0.0:${grpcPort}`,
+    },
   });
 
-  const port = required('PORT');
-  const baseUrl = required('BASE_URL');
-
-  await app.listen(port);
-  logger.log(`🚀 Application is running on ${baseUrl}`);
+  await app.listen();
+  logger.log(`🔌 gRPC Server is running on port ${grpcPort}`);
 }
 
 bootstrap().catch(err => {
