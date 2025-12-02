@@ -51,10 +51,17 @@ export class AuthService {
     await this.usersService.ensureEmailIsAvailable(dto.email);
 
     const hashedPassword = await bcrypt.hash(dto.password, 10);
+    
+    let role = 'CLIENT';
+    if (dto.adminSecret && dto.adminSecret === process.env.ADMIN_REGISTRATION_KEY) {
+      role = 'ADMIN';
+    }
+
     const user = await this.usersService.save({
       name: dto.name,
       email: dto.email,
       password: hashedPassword,
+      role: role,
     } as User);
 
     const token = this.jwtService.sign(
@@ -68,7 +75,7 @@ export class AuthService {
     const user = await this.validateUserCredentials(dto);
 
     const accesToken = this.jwtService.sign(
-      { purpose: JWT_PURPOSE.SESSION, sub: user.id, email: user.email },
+      { purpose: JWT_PURPOSE.SESSION, sub: user.id, email: user.email, role: user.role },
       JWT_EXPIRES_IN.SESSION,
     );
     return accesToken;

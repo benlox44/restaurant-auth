@@ -9,6 +9,7 @@ interface RegisterRequest {
   email: string;
   password: string;
   name: string;
+  adminSecret?: string;
 }
 
 interface LoginRequest {
@@ -48,6 +49,7 @@ export class AuthController {
       email: data.email,
       password: data.password,
       name: data.name,
+      adminSecret: data.adminSecret,
     };
     await this.authService.create(createUserDto);
     return { message: 'User registered successfully. Please check your email to confirm.' };

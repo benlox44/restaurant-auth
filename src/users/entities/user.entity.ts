@@ -31,4 +31,7 @@ export class User {
 
   @Column({ type: 'timestamp', nullable: true })
   public emailChangedAt: Date | null;
+
+  @Column({ default: 'CLIENT' })
+  public role: string;
 }

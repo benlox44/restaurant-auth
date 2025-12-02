@@ -54,6 +54,7 @@ message User {
   string oldEmail = 7;
   string newEmail = 8;
   string emailChangedAt = 9;
+  string role = 10;
 }
 
 message UserResponse {

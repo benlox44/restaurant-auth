@@ -4,6 +4,7 @@ export type JwtPayloadBase = {
   purpose: JwtPurpose;
   sub: number;
   email: string;
+  role?: string;
 };
 
 export type JwtPayload = JwtPayloadBase & {

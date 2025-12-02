@@ -27,4 +27,6 @@ export class CreateUserDto {
     },
   )
   public password: string;
+
+  public adminSecret?: string;
 }
