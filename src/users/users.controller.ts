@@ -9,11 +9,8 @@ import { GrpcExceptionFilter } from '../common/filters/grpc-exception.filter.js'
 import type { SafeUser } from '../common/index.js';
 import type { JwtPayload } from '../jwt/types/jwt-payload.type.js';
 
-// Interfaces sin userId - se obtiene del token JWT
 // eslint-disable-next-line @typescript-eslint/no-empty-object-type
-interface EmptyRequest {
-  // Para métodos que solo necesitan el token
-}
+interface EmptyRequest {}
 
 interface UpdateProfileRequest {
   name: string;
@@ -41,7 +38,6 @@ export class UsersController {
     private readonly jwtService: JwtService,
   ) {}
 
-  // Helper method to extract user from gRPC metadata
   private async extractUser(metadata: unknown): Promise<JwtPayload> {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-assignment
     const authHeader = (metadata as any).get('authorization');
@@ -61,7 +57,7 @@ export class UsersController {
         throw new UnauthorizedException('Invalid token purpose');
       }
       
-      // Verificar que el email del token coincida con el email actual en la BD
+      // Invalidate token if email changed to prevent access with old credentials
       const user = await this.usersService.findById(payload.sub);
       if (!user) {
         throw new UnauthorizedException('User not found');
@@ -97,10 +93,9 @@ export class UsersController {
   ): Promise<{ message: string }> {
     const user = await this.extractUser(metadata);
     
-    // Validación de campo requerido
     if (!data?.name || data.name.trim() === '') {
       throw new RpcException({
-        code: 3, // INVALID_ARGUMENT
+        code: 3,
         message: 'Name is required and cannot be empty',
       });
     }
@@ -116,10 +111,9 @@ export class UsersController {
   ): Promise<{ message: string }> {
     const user = await this.extractUser(metadata);
     
-    // Validación de campos requeridos
     if (!data?.currentPassword || !data?.newPassword) {
       throw new RpcException({
-        code: 3, // INVALID_ARGUMENT
+        code: 3,
         message: 'Current password and new password are required',
       });
     }
@@ -138,10 +132,9 @@ export class UsersController {
   ): Promise<{ message: string }> {
     const user = await this.extractUser(metadata);
     
-    // Validación de campos requeridos
     if (!data?.password || !data?.newEmail) {
       throw new RpcException({
-        code: 3, // INVALID_ARGUMENT
+        code: 3,
         message: 'Password and new email are required',
       });
     }
@@ -160,10 +153,9 @@ export class UsersController {
   ): Promise<{ message: string }> {
     const user = await this.extractUser(metadata);
     
-    // Validación de campo requerido
     if (!data?.password) {
       throw new RpcException({
-        code: 3, // INVALID_ARGUMENT
+        code: 3,
         message: 'Password is required to delete your account',
       });
     }

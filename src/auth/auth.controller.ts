@@ -37,10 +37,9 @@ export class AuthController {
 
   @GrpcMethod('AuthService', 'Register')
   public async register(data: RegisterRequest): Promise<{ message: string }> {
-    // Validación de campos requeridos
     if (!data.email || !data.password || !data.name) {
       throw new RpcException({
-        code: 3, // INVALID_ARGUMENT
+        code: 3,
         message: 'Email, password, and name are required fields',
       });
     }
@@ -57,10 +56,9 @@ export class AuthController {
 
   @GrpcMethod('AuthService', 'Login')
   public async login(data: LoginRequest): Promise<{ accessToken: string }> {
-    // Validación de campos requeridos
     if (!data.email || !data.password) {
       throw new RpcException({
-        code: 3, // INVALID_ARGUMENT
+        code: 3,
         message: 'Email and password are required fields',
       });
     }
@@ -75,10 +73,9 @@ export class AuthController {
 
   @GrpcMethod('AuthService', 'RequestPasswordReset')
   public async requestPasswordReset(data: EmailRequest): Promise<{ message: string }> {
-    // Validación de campo requerido
     if (!data.email) {
       throw new RpcException({
-        code: 3, // INVALID_ARGUMENT
+        code: 3,
         message: 'Email is required',
       });
     }
@@ -104,10 +101,9 @@ export class AuthController {
 
   @GrpcMethod('AuthService', 'RequestUnlock')
   public async requestUnlock(data: EmailRequest): Promise<{ message: string }> {
-    // Validación de campo requerido
     if (!data.email) {
       throw new RpcException({
-        code: 3, // INVALID_ARGUMENT
+        code: 3,
         message: 'Email is required',
       });
     }

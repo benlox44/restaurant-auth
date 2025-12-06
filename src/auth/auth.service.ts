@@ -24,18 +24,6 @@ import { User } from '../users/entities/user.entity.js';
 import { UsersService } from '../users/users.service.js';
 
 
-/**
- * AuthService
- *
- * Service responsible for authentication, registration,
- * password recovery, and email confirmation workflows.
- *
- * Provides methods grouped by type:
- * - GET methods: Handle token-based confirmations.
- * - POST methods: Handle login, registration and account recovery.
- * - AUXILIARY methods: Internal logic for validating credentials and generating tokens.
- */
-
 @Injectable()
 export class AuthService {
   public constructor(
@@ -44,8 +32,6 @@ export class AuthService {
     private readonly mailService: MailService,
     private readonly usersRedisService: UsersRedisService,
   ) {}
-
-  // ===== POST METHODS (Credentials, registration & recovery) =====
 
   public async create(dto: CreateUserDto): Promise<void> {
     await this.usersService.ensureEmailIsAvailable(dto.email);
@@ -80,9 +66,6 @@ export class AuthService {
     );
     return accesToken;
   }
-
-  // Removed: requestConfirmationEmail. Tokens last 1 day; accounts older than
-  // 24h and unconfirmed are deleted automatically on startup.
 
   public async requestPasswordReset(
     dto: RequestPasswordResetDto,
@@ -164,8 +147,6 @@ export class AuthService {
     await this.mailService.sendUnlockAccount(user.email, token);
   }
 
-  // ===== GET METHODS (Token-based actios) =====
-
   public async confirmEmail(token: string): Promise<void> {
     const payload = await this.jwtService.verify(
       token,
@@ -217,8 +198,6 @@ export class AuthService {
     );
     const user = await this.usersService.findByIdOrThrow(payload.sub);
 
-    /** Token expires in 30d, and change is allowed only once per 30d
-    no extra checks needed */
     user.email = user.oldEmail!;
     user.oldEmail = null;
     user.emailChangedAt = null;
@@ -255,8 +234,6 @@ export class AuthService {
       JWT_EXPIRES_IN.UNLOCK_ACCOUNT,
     );
   }
-
-  // ===== AUXILIARY METHODS =====
 
   private async validateUserCredentials(dto: LoginDto): Promise<User> {
     const user = await this.usersService.findByEmail(dto.email);

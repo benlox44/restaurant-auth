@@ -3,7 +3,7 @@ services:
     container_name: restaurant-auth-microservice
     build:
       context: .
-      dockerfile: Dockerfile.dev
+      dockerfile: Dockerfile
     restart: unless-stopped
     ports:
       - '50051:50051'

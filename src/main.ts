@@ -10,7 +10,6 @@ import 'dotenv/config';
 const logger = new Logger('Bootstrap');
 
 async function bootstrap(): Promise<void> {
-  // Create gRPC-only microservice
   const grpcPort = process.env.GRPC_PORT || '50051';
   
   const app = await NestFactory.createMicroservice<MicroserviceOptions>(AppModule, {

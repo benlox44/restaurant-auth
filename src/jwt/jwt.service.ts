@@ -37,7 +37,6 @@ export class AppJwtService {
     await this.jwtRedis.markJtiAsUsed(jti, seconds);
   }
 
-  // Aux
   public ensureExpectedPurpose(actual: JwtPurpose, expected: JwtPurpose): void {
     if (actual !== expected)
       throw new UnauthorizedException('Invalid token purpose');

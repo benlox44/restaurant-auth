@@ -18,7 +18,6 @@ import { UsersModule } from './users/users.module.js';
       password: required('DATABASE_PASSWORD'),
       database: required('DATABASE_NAME'),
       entities: [User],
-      // Use env flag to control schema sync (never enable in production)
       synchronize: process.env.DB_SYNCHRONIZE === 'true',
       ssl: process.env.DATABASE_SSL === 'true' ? { rejectUnauthorized: false } : undefined,
     }),

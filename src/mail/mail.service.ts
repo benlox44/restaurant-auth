@@ -21,21 +21,19 @@ export class MailService {
   });
   private readonly baseUrl = required('BASE_URL');
 
-  private async loadTemplate(name: string, token: string): Promise<string> {
-    // Prefer compiled templates under dist/ in production, fallback to src/ in development
+  private async loadTemplate(name: string, urlPath: string): Promise<string> {
+    // Fallback to src/ for development, dist/ for production
     const compiledPath = path.join(__dirname, 'templates', name);
     let templatePath = compiledPath;
 
     try {
-      // Check compiled path first
       await fs.access(compiledPath);
     } catch {
-      // Fallback to source templates for development
       templatePath = path.resolve(process.cwd(), 'src', 'mail', 'templates', name);
     }
 
     let html = await fs.readFile(templatePath, 'utf8');
-    const url = `${this.baseUrl}/auth/${token}`;
+    const url = `${this.baseUrl}/auth/${urlPath}`;
     html = html.replace(/{{LINK}}/g, url);
     return html;
   }

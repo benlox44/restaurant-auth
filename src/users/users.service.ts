@@ -21,24 +21,6 @@ import { AppJwtService } from '../jwt/jwt.service.js';
 import { MailService } from '../mail/mail.service.js';
 
 
-/**
- * UsersService
- *
- * Service responsible for managing user entities.
- * Handles user retrieval, profile updates, password changes,
- * email change requests, account locking, and user deletion.
- *
- * Exposes methods grouped by type:
- * - GET methods: Fetch user(s) by ID or email.
- * - SAVE methods: Persist new or updated user entities.
- * - PATCH methods: Update user-specific fields.
- * - DELETE methods: Remove user entities or clean up old unconfirmed accounts.
- * - AUXILIARY methods: Internal validation utilities (email uniqueness, password checks).
- *
- * This service is intended to be used by controllers handling user operations,
- * and by authentication flows needing direct access to user data.
- */
-
 @Injectable()
 export class UsersService {
   public constructor(
@@ -48,13 +30,9 @@ export class UsersService {
     private readonly mailService: MailService,
   ) {}
 
-  // ===== POST METHODS =====
-
   public save(user: User): Promise<User> {
     return this.usersRepository.save(user);
   }
-
-  // ===== GET METHODS =====
 
   public async findAll(): Promise<SafeUser[]> {
     const users = await this.usersRepository.find();
